@@ -5,12 +5,12 @@ execSync('npm run seed')
 
 const request = require('supertest')
 const { db } = require('./db/connection')
-const { Musician } = require('./models/index')
+const { Musician, Band } = require('./models/index')
 const app = require('./src/app')
 const seedMusician = require('./seedData')
 
-describe('./musicians endpoint', () => {
-	test('Testing GET all Musicians', async () => {
+describe('/musicians endpoint', () => {
+	test('GET returns all Musicians', async () => {
 		const res = await request(app).get('/musicians')
 		expect(res.statusCode).toBe(200)
 	})
@@ -59,5 +59,50 @@ describe('./musicians endpoint', () => {
 			.expect(200)
 
 		expect(response.status).toBe(200)
+	})
+})
+
+describe('/bands endpoint', () => {
+	test('returns bands with musicians', async () => {
+		const bandsWithMusicians = await Band.findAll({ include: Musician })
+
+		const response = await request(app).get('/bands').expect(200)
+
+		expect(Array.isArray(response.body)).toBe(true)
+
+		const expectedBandsWithMusicians = bandsWithMusicians.map((band) => {
+			return {
+				...band.toJSON(),
+				createdAt: band.createdAt.toISOString(),
+				updatedAt: band.updatedAt.toISOString(),
+				musicians: band.musicians.map((musician) => {
+					return {
+						...musician.toJSON(),
+						createdAt: musician.createdAt.toISOString(),
+						updatedAt: musician.updatedAt.toISOString()
+					}
+				})
+			}
+		})
+
+		expect(response.body).toEqual(expectedBandsWithMusicians)
+	})
+
+	test('fetches a band by ID with included musicians', async () => {
+		const bandId = 1
+		const targetBand = await Band.findOne({
+			where: { id: bandId },
+			include: Musician
+		})
+
+		const response = await request(app).get(`/bands/${bandId}`).expect(200)
+
+		expect(response.body).toEqual(
+			expect.objectContaining({
+				id: 1,
+				name: 'The Beatles',
+				genre: 'Rock'
+			})
+		)
 	})
 })
