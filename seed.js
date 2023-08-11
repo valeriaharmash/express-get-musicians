@@ -1,11 +1,27 @@
-const { Musician, Band } = require("./models/index")
-const { db } = require("./db/connection");
-const { seedMusician, seedBand } = require("./seedData");
+const { Musician, Band } = require('./models/index')
+const { db } = require('./db/connection')
+const { seedMusician, seedBand } = require('./seedData')
 
-const syncSeed = async () => {
-    await db.sync({force: true});
-    seedMusician.map(musician => Musician.create(musician));
-    seedBand.map(band => Band.create(band));
+const getRandomInt = (max) => {
+	return Math.floor(Math.random() * max)
 }
 
-syncSeed();
+const syncSeed = async () => {
+	await db.sync({ force: true })
+
+	const createdBands = await Promise.all(
+		seedBand.map((band) => {
+			return Band.create(band)
+		})
+	)
+
+	await Promise.all(
+		seedMusician.map((musician) => {
+			const randomBandIdx = getRandomInt(createdBands.length)
+			musician.bandId = createdBands[randomBandIdx].id
+			return Musician.create(musician)
+		})
+	)
+}
+
+syncSeed()
