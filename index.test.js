@@ -60,6 +60,17 @@ describe('/musicians endpoint', () => {
 
 		expect(response.status).toBe(200)
 	})
+
+	test('should return error if name field is empty', async () => {
+		const invalidNameData = {
+			name: '',
+			instrument: 'guitar'
+		}
+		const res = await request(app).post('/musicians').send(invalidNameData)
+
+		expect(res.status).toBe(500)
+		expect(res.text).toContain('Name or instrument field is empty')
+	})
 })
 
 describe('/bands endpoint', () => {

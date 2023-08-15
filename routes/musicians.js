@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+const { check, validationResult } = require('express-validator')
 const { Musician } = require('../models/index')
 
 router.get('/', async (req, res) => {
@@ -28,18 +29,28 @@ router.get('/:id', async (req, res) => {
 	}
 })
 
-router.post('/', async (req, res, next) => {
-	try {
-		const musician = await Musician.create(req.body)
+router.post(
+	'/',
+	[check('name').not().isEmpty().trim()],
+	[check('instrument').not().isEmpty().trim()],
+	async (req, res, next) => {
+		try {
+			const errors = validationResult(req)
+			if (errors.isEmpty()) {
+				const musician = await Musician.create(req.body)
 
-		if (!musician) {
-			throw new Error('No musician created')
+				if (!musician) {
+					throw new Error('No musician created')
+				}
+				res.send(musician)
+			} else {
+				throw new Error('Name or instrument field is empty')
+			}
+		} catch (error) {
+			next(error)
 		}
-		res.send(musician)
-	} catch (error) {
-		next(error)
 	}
-})
+)
 
 router.put('/:id', async (req, res, next) => {
 	try {
