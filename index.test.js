@@ -71,6 +71,43 @@ describe('/musicians endpoint', () => {
 		expect(res.status).toBe(500)
 		expect(res.text).toContain('Name or instrument field is empty')
 	})
+
+	test('should return error if instrument field is empty', async () => {
+		const invalidInstrumentData = {
+			name: 'Elvis',
+			instrument: ''
+		}
+		const res = await request(app)
+			.post('/musicians')
+			.send(invalidInstrumentData)
+
+		expect(res.status).toBe(500)
+		expect(res.text).toContain('Name or instrument field is empty')
+	})
+
+	test('should retutn error if name is less than 2 chars or more than 20 chars', async () => {
+		const invalidNameData = {
+			name: 'H',
+			instrument: 'guitar'
+		}
+		const res = await request(app).post('/musicians').send(invalidNameData)
+
+		expect(res.status).toBe(500)
+		expect(res.text).toContain('Name or instrument field is empty')
+	})
+
+	test('should retutn error if instrument is less than 2 chars or more than 20 chars', async () => {
+		const invalidInstrumentData = {
+			name: 'Elvis',
+			instrument: 'H'
+		}
+		const res = await request(app)
+			.post('/musicians')
+			.send(invalidInstrumentData)
+
+		expect(res.status).toBe(500)
+		expect(res.text).toContain('Name or instrument field is empty')
+	})
 })
 
 describe('/bands endpoint', () => {
